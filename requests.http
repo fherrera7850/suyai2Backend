@@ -1,0 +1,64 @@
+
+
+###
+GET http://localhost:4000/api/venta/Historial HTTP/1.1
+
+###
+GET http://192.168.1.155:4000/api/producto/ HTTP/1.1
+
+###
+GET http://localhost:4000/api/cliente/2
+
+
+
+###
+GET http://localhost:4000/api/pedido/
+###
+GET http://localhost:4000/api/venta/108
+
+
+###
+DELETE http://localhost:4000/api/venta/267
+
+###
+POST  http://localhost:4000/api/pedidoventa/CompletaPedidoVenta HTTP/1.1
+Content-Type: application/json
+
+{
+    "id_venta":     0,
+    "id_pedido":    0
+}
+
+###
+GET http://localhost:4000/api/Venta/Estadisticas/2022-07-26/2023-07-26 HTTP/1.1
+Content-Type: application/json
+
+###
+GET http://localhost:4000/api/Venta/Estadisticas/2023-07-13/2023-07-18 HTTP/1.1
+Content-Type: application/json
+
+
+###
+DELETE  http://localhost:4000/api/pedido/EliminarPedido
+Content-Type: application/json
+
+{
+    "id_pedido": 0
+}
+
+###
+POST  http://localhost:4000/api/pedido/ActualizaPedidoPagado
+Content-Type: application/json
+
+{
+    "id_pedido": 90,
+    "pagada": "S"
+}
+
+###
+GET  https://bcknodesuyai-production.up.railway.app/api/pedido/ResumenDiario
+Content-Type: application/json
+
+###
+GET https://bcknodesuyai-production.up.railway.app/api/pedido/ResumenDiario
+Content-Type: application/json
