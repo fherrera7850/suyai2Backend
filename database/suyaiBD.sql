@@ -67,3 +67,7 @@ INSERT INTO `rol` (`idRol`, `descripcionRol`) VALUES
 INSERT INTO `usuario` (`idUsuario`, `idRol`, `nombreUsuario`, `passwordUsuario`, `email`, `direccion`, `telefono`, `activo`) VALUES
 (1, 1, 'admin', '123456', 'admin@suyai.com', NULL, NULL, 1),
 (2, 3, 'felipe', '123456', 'felipe@suyai.com', NULL, NULL, 0);
+
+-- Agregar columna nombreProducto a la tabla producto
+ALTER TABLE producto
+ADD COLUMN nombreProducto VARCHAR(50) AFTER idProducto;

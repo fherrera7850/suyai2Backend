@@ -3,6 +3,10 @@ import { methods as productoController } from "./../controllers/producto.control
 
 const router = Router();
 
-router.get("/", productoController.getProductos);
+router.get("/getProductos", productoController.getProductos);
+router.get("/getProducto/:id", productoController.getProducto);
+router.post("/addProducto", productoController.addProducto);
+router.put("/:id", productoController.updateProducto);
+router.delete("/:id", productoController.deleteProducto);
 
 export default router;
