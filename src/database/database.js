@@ -9,7 +9,7 @@ const parameters = {
     port: config.port,
     connectTimeout: 100000
 }
-//console.log("🚀 ~ file: database.js ~ line 11 ~ parameters", parameters)
+console.log("🚀 ~ file: database.js ~ line 11 ~ parameters", parameters)
 const connection = mysql.createPool(parameters);
 
 const getConnection = () => {
