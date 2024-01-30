@@ -29,20 +29,7 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `carrito` (
   `idCarrito` int(11) NOT NULL,
-  `idUsuario` int(11) DEFAULT NULL,
-  `idProducto` int(11) DEFAULT NULL,
-  `cantidad` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `detallepedido`
---
-
-CREATE TABLE `detallepedido` (
-  `idDetallePedido` int(11) NOT NULL,
-  `idPedido` int(11) DEFAULT NULL,
+  `idPedido` int(11) NOT NULL,
   `idProducto` int(11) DEFAULT NULL,
   `cantidad` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -55,11 +42,9 @@ CREATE TABLE `detallepedido` (
 
 CREATE TABLE `pedido` (
   `idPedido` int(11) NOT NULL,
-  `idCarrito` int(11) DEFAULT NULL,
   `idUsuario` int(11) DEFAULT NULL,
   `fecha` timestamp NOT NULL DEFAULT current_timestamp(),
   `estado` varchar(255) DEFAULT NULL,
-  `comentario` text DEFAULT NULL,
   `monto` decimal(10,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -144,23 +129,14 @@ INSERT INTO `usuario` (`idUsuario`, `idRol`, `nombreUsuario`, `passwordUsuario`,
 --
 ALTER TABLE `carrito`
   ADD PRIMARY KEY (`idCarrito`),
-  ADD KEY `idUsuario` (`idUsuario`),
-  ADD KEY `idProducto` (`idProducto`);
-
---
--- Indices de la tabla `detallepedido`
---
-ALTER TABLE `detallepedido`
-  ADD PRIMARY KEY (`idDetallePedido`),
   ADD KEY `idPedido` (`idPedido`),
   ADD KEY `idProducto` (`idProducto`);
 
---
+
 -- Indices de la tabla `pedido`
 --
 ALTER TABLE `pedido`
   ADD PRIMARY KEY (`idPedido`),
-  ADD KEY `idCarrito` (`idCarrito`),
   ADD KEY `idUsuario` (`idUsuario`);
 
 --
@@ -192,11 +168,6 @@ ALTER TABLE `usuario`
 ALTER TABLE `carrito`
   MODIFY `idCarrito` int(11) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT de la tabla `detallepedido`
---
-ALTER TABLE `detallepedido`
-  MODIFY `idDetallePedido` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `pedido`
@@ -224,21 +195,14 @@ ALTER TABLE `usuario`
 -- Filtros para la tabla `carrito`
 --
 ALTER TABLE `carrito`
-  ADD CONSTRAINT `carrito_ibfk_1` FOREIGN KEY (`idUsuario`) REFERENCES `usuario` (`idUsuario`),
-  ADD CONSTRAINT `carrito_ibfk_2` FOREIGN KEY (`idProducto`) REFERENCES `producto` (`idProducto`);
+  ADD CONSTRAINT `carrito_ibfk_1` FOREIGN KEY (`idProducto`) REFERENCES `producto` (`idProducto`),
+  ADD CONSTRAINT `carrito_ibfk_2` FOREIGN KEY (`idPedido`) REFERENCES `pedido` (`idPedido`);
 
---
--- Filtros para la tabla `detallepedido`
---
-ALTER TABLE `detallepedido`
-  ADD CONSTRAINT `detallepedido_ibfk_1` FOREIGN KEY (`idPedido`) REFERENCES `pedido` (`idPedido`),
-  ADD CONSTRAINT `detallepedido_ibfk_2` FOREIGN KEY (`idProducto`) REFERENCES `producto` (`idProducto`);
 
 --
 -- Filtros para la tabla `pedido`
 --
 ALTER TABLE `pedido`
-  ADD CONSTRAINT `pedido_ibfk_1` FOREIGN KEY (`idCarrito`) REFERENCES `carrito` (`idCarrito`),
   ADD CONSTRAINT `pedido_ibfk_2` FOREIGN KEY (`idUsuario`) REFERENCES `usuario` (`idUsuario`);
 
 --
@@ -251,3 +215,11 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+INSERT INTO `producto` (`idProducto`, `nombreProducto`, `descripcionProducto`, `precio`, `stock`, `imagen`, `activo`) 
+VALUES 
+(NULL, 'Recarga 20lts', 'Recarga de agua purificada de 20 litros, filtrada por osmosis inversa.\r\nNo incluye envase.', '2000', '1000', 'assets/products/bidon.png', '1'), 
+(NULL, 'Dispensador Sobremesa', 'Dispensador de sobremesa, soporta bidones de 10 y 20 litros.', '6000', '34', 'assets/products/dispensadorMesa.jpg', '1');
+
+UPDATE `producto` SET `imagen` = 'assets/products/dispensadorUSB.jpg' WHERE `producto`.`idProducto` = 1;

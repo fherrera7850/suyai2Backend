@@ -8,6 +8,7 @@ import productoRoutes from "./routes/producto.routes";
 //import productoRoutes from "./routes/admin.routes";
 import registroRoutes from "./routes/registro.routes";
 import loginRoutes from "./routes/login.routes";
+import carritoRoutes from "./routes/carrito.routes";
 
 const app = express();
 // Settings
@@ -25,5 +26,6 @@ app.use("/api/producto", productoRoutes);
 //app.use("/api/admin", productoRoutes);
 app.use("/api/registro", registroRoutes);
 app.use("/api/login", loginRoutes);
+app.use("/api/carrito", carritoRoutes);
 
 export default app;
