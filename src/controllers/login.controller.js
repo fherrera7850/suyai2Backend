@@ -1,22 +1,23 @@
-// Importa la conexión hacia la base de datos
 import { getConnection } from "./../database/database";
-import bcrypt from 'bcrypt';
+//import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import { getDefaultCart } from './../cartUtils';
+
 
 const encryptData = (data) => {
-  // Usar una clave secreta para cifrar los datos (deberías guardar esta clave de forma segura)
+  // Usar una clave secreta para cifrar los datos (guardar esta clave de forma segura)
 
   const secretKey = crypto.randomBytes(32); // Genera una clave de 32 bytes para aes-256-cbc
   const iv = crypto.randomBytes(16); // Genera un vector de inicialización de 16 bytes
 
-const cipher = crypto.createCipheriv('aes-256-cbc', secretKey, iv);
+  const cipher = crypto.createCipheriv('aes-256-cbc', secretKey, iv);
   let encryptedData = cipher.update(data, 'utf-8', 'hex');
   encryptedData += cipher.final('hex');
 
   return encryptedData;
 };
 
-const loginUsuario = async (req, res) => {
+  const loginUsuario = async (req, res) => {
   const connection = await getConnection();
 
   const { nombreUsuario, passwordUsuario } = req.body;
@@ -31,15 +32,15 @@ const loginUsuario = async (req, res) => {
 
     if (result.length > 0) {
       const idUsuario = result[0].idUsuario;
-      const idRol = result[0].idRol;
+      //const idRol = result[0].idRol;
 
       // Encriptar la información de la sesión
       const encryptedIdUsuario = encryptData(idUsuario.toString());
-      const encryptedIdRol = encryptData(idRol.toString());
+      //const encryptedIdRol = encryptData(idRol.toString());
 
       // Establecer la información de la sesión y el carrito en la cookie
       res.cookie('sesionUsuario', JSON.stringify({ idUsuario: encryptedIdUsuario, idRol: encryptedIdRol, cartItems: getDefaultCart() }), { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
-      res.status(200).json({ nombreUsuario });
+      res.status(200).send();  //json({ nombreUsuario });
     } else {
       res.status(204).send();
     }
@@ -76,13 +77,13 @@ const loginUsuario = async (req, res) => {
       res.json(result);
 
       //el codigo 200 es una respuesta HTTP al cliente que significa que la solicitud fue exitosa
-      //res.status(200).send();
+      
       res.status(200).send();
     } else {
       //res.json("LOGIN INCORRECTO")
-      res.status(204).send();
+      res.status(500).send();
       //res.json("fail");
-      //res.status(204); 
+       
     }
   } catch (error) {
     //rollback es la reversion de la query, es decir revierte o invalida la inserción de datos en caso de error
