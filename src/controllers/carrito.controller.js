@@ -49,10 +49,37 @@ const hayProductoEnCarro = async (idPedido, idProducto) => {
     }
 };
 
+const carroProductos = async (idUsuario) => {
+    try {
+        const connection = await getConnection();
+        let qry = `SELECT idProducto, idUsuario, cantidad, nombreProducto, descripcionProducto, precio, stock, imagen `;
+        qry += `FROM (`;
+        qry += `SELECT idProducto, idUsuario, cantidad, nombreProducto, descripcionProducto, precio, stock, imagen, ROW_NUMBER() OVER (PARTITION BY idProducto ORDER BY idUsuario DESC) AS rn `;
+        qry += `FROM (`;
+        qry += `SELECT idProducto, NULL AS idUsuario, 0 AS cantidad, nombreProducto, descripcionProducto, precio, stock, imagen `;
+        qry += `FROM producto `;
+        qry += `WHERE activo = 1 `;
+        qry += `UNION `;
+        qry += `SELECT prod.idProducto, ped.idUsuario, c.cantidad, prod.nombreProducto, prod.descripcionProducto, prod.precio, prod.stock, prod.imagen `;
+        qry += `FROM pedido ped INNER JOIN carrito c ON ped.idPedido=c.idPedido `;
+        qry += `INNER JOIN producto prod ON prod.idProducto=c.idProducto `;
+        qry += `WHERE ped.idusuario = ${idUsuario} AND ped.estado = 'I' AND prod.activo = 1 `;
+        qry += `) AS combined `;
+        qry += `) AS numbered `;
+        qry += `WHERE rn = 1 `;
+        qry += `order by 1;`;
+        return await connection.query(qry);
+
+    } catch (error) {
+        console.log("🚀 ~ hayProductoEnCarro ~ error:", error)
+        return [];
+    }
+};
+
 
 const actualizaCarrito = async (req, res) => {
-    const { idUsuario, idProducto, cantidad } = req.body;
-    console.log("🚀 ~ actualizaCarrito ~ cantidad:", cantidad)
+    const { idUsuario, idProducto, action } = req.body;
+    console.log("🚀 ~ actualizaCarrito ~ action:", action)
     console.log("🚀 ~ actualizaCarrito ~ idProducto:", idProducto)
     console.log("🚀 ~ actualizaCarrito ~ idUsuario:", idUsuario)
 
@@ -61,42 +88,44 @@ const actualizaCarrito = async (req, res) => {
     try {
         const existePedido = await validaPedido(idUsuario);
         let idPedido = null;
-        
-        if (existePedido === -1) { //No existe pedido abierto para el usuario
-            idPedido = await crearPedido(idUsuario); //Crea el pedido y obtiene el idPedido
-        }
-        else {
+
+        if (existePedido === -1) { // No existe pedido abierto para el usuario
+            idPedido = await crearPedido(idUsuario); // Crea el pedido y obtiene el idPedido
+        } else {
             idPedido = existePedido.idPedido;
         }
 
         console.log("🚀 ~ actualizaCarrito ~ idPedido:", idPedido)
 
-        const carrito = {
-            idPedido,
-            idProducto,
-            cantidad
-        }
-
         await connection.query('START TRANSACTION');
-        if (!await hayProductoEnCarro(idPedido, idProducto)) {
-            await connection.query("INSERT INTO carrito SET ?", carrito)
-        }
-        else {
-            await connection.query(`UPDATE carrito SET cantidad = ${cantidad} WHERE idPedido = ${idPedido} AND idProducto = ${idProducto};`);
-        }
-        await connection.query("commit");
 
-        let qry = `SELECT c.idProducto, c.cantidad FROM carrito c inner join pedido p ON c.idPedido = p.idPedido WHERE p.idPedido = ${idPedido};`
-        const resultCarrito = await connection.query(qry);
+        if (action === 'add') {
+            if (!await hayProductoEnCarro(idPedido, idProducto)) {
+                await connection.query("INSERT INTO carrito SET ?", { idPedido, idProducto, cantidad: 1 });
+            } else {
+                await connection.query(`UPDATE carrito SET cantidad = cantidad + 1 WHERE idPedido = ${idPedido} AND idProducto = ${idProducto};`);
+            }
+        } else if (action === 'remove') {
+            if (await hayProductoEnCarro(idPedido, idProducto)) {
+                await connection.query(`UPDATE carrito SET cantidad = cantidad - 1 WHERE idPedido = ${idPedido} AND idProducto = ${idProducto} AND cantidad > 0;`);
+            }
+        } else {
+            throw new Error("Acción no válida");
+        }
 
-        res.json(resultCarrito)
+        await connection.query("COMMIT");
+
+        res.json(await carroProductos(idUsuario)); // Obtiene los productos y cantidades actualizadas y los retorna en el json
         res.status(200);
     } catch (error) {
-        await connection.query("rollback")
+        await connection.query("ROLLBACK");
         console.log("Rollback. ERROR:", error)
-        res.sendStatus(500)
+        res.sendStatus(500);
     }
 };
+
+
+
 
 export const methods = {
     actualizaCarrito
