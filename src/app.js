@@ -9,6 +9,7 @@ import productoRoutes from "./routes/producto.routes";
 import registroRoutes from "./routes/registro.routes";
 import loginRoutes from "./routes/login.routes";
 import carritoRoutes from "./routes/carrito.routes";
+import pedidoRoutes from "./routes/pedido.routes";
 
 const app = express();
 // Settings
@@ -27,5 +28,6 @@ app.use("/api/producto", productoRoutes);
 app.use("/api/registro", registroRoutes);
 app.use("/api/login", loginRoutes);
 app.use("/api/carrito", carritoRoutes);
+app.use("/api/pedido", pedidoRoutes);
 
 export default app;

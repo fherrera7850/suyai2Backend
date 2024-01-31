@@ -3,10 +3,10 @@ import { methods as pedidoController } from "./../controllers/pedido.controller"
 
 const router = Router();
 
-router.get("/getPedidos", pedidoController.getPedidos);
-router.get("/getPedido/:id", pedidoController.getPz);
-router.post("/addPedidoo", pedidoController.addProducto);
-router.put("/:id", pedidoController.updateProducto);
-router.delete("/:id", pedidoController.deleteProducto);
+router.get("/getPedidos/:id", pedidoController.getPedidos);
+router.get("/getPedido/:id", pedidoController.getPedido);
+router.post("/addPedido", pedidoController.addPedido);
+router.put("/:id", pedidoController.updatePedido);
+router.delete("/:id", pedidoController.deletePedido);
 
 export default router;

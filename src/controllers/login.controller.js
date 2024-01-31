@@ -1,4 +1,54 @@
 import { getConnection } from "./../database/database";
+import crypto from 'crypto';
+import { getDefaultCart } from './../cartUtils';
+
+const encryptData = (data) => {
+  const secretKey = crypto.randomBytes(32);
+  const iv = crypto.randomBytes(16);
+
+  const cipher = crypto.createCipheriv('aes-256-cbc', secretKey, iv);
+  let encryptedData = cipher.update(data, 'utf-8', 'hex');
+  encryptedData += cipher.final('hex');
+
+  return encryptedData;
+};
+
+const loginUsuario = async (req, res) => {
+  const connection = await getConnection();
+
+  const { nombreUsuario, passwordUsuario } = req.body;
+
+  try {
+    const result = await connection.query(
+      `SELECT u.idUsuario, r.idRol FROM usuario u INNER JOIN rol r ON r.idRol = u.idRol WHERE u.nombreUsuario = '${nombreUsuario}' AND u.passwordUsuario = '${passwordUsuario}';`,
+      req.body
+    );
+
+    if (result.length > 0) {
+      const idUsuario = result[0].idUsuario;
+      const idRol = result[0].idRol;
+
+      const encryptedIdUsuario = encryptData(idUsuario.toString());
+      const encryptedIdRol = encryptData(idRol.toString());
+
+      res.cookie('sesionUsuario', JSON.stringify({ idUsuario: encryptedIdUsuario, idRol: encryptedIdRol, cartItems: getDefaultCart() }), { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+      res.status(200).json({ nombreUsuario });
+    } else {
+      res.status(204).send();
+    }
+  } catch (error) {
+    await connection.query("rollback");
+    console.log("Rollback. ERROR:", error);
+    res.sendStatus(500);
+  }
+};
+
+export const methods = {
+  loginUsuario,
+};
+/************************************************************************************************************** */
+/*
+import { getConnection } from "./../database/database";
 //import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { getDefaultCart } from './../cartUtils';
@@ -39,7 +89,7 @@ const encryptData = (data) => {
       //const encryptedIdRol = encryptData(idRol.toString());
 
       // Establecer la información de la sesión y el carrito en la cookie
-      res.cookie('sesionUsuario', JSON.stringify({ idUsuario: encryptedIdUsuario, idRol: encryptedIdRol, cartItems: getDefaultCart() }), { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+      res.cookie('sesionUsuario', JSON.stringify({ idUsuario: encryptedIdUsuario,/* idRol: encryptedIdRol, cartItems: getDefaultCart() }), { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
       res.status(200).send();  //json({ nombreUsuario });
     } else {
       res.status(204).send();
@@ -54,7 +104,7 @@ const encryptData = (data) => {
 export const methods = {
   loginUsuario,
 };
-
+*/
 /*-------------------------------------------------------------------------------------------------------------------------------- */
 /*
 //Importa la conexión hacia la base de datos
