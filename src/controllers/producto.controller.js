@@ -7,11 +7,37 @@ import { getConnection } from "./../database/database";
 //realizar funciones como consultas a BBDD o consumo de API's externas
 const getProductos = async (req, res) => {
     try {
+        const { id } = req.params;
         //await es parte de la implementación de async
         //obtiene la conexion
         const connection = await getConnection();
         //query
-        let qry = "SELECT * FROM producto WHERE ACTIVO = TRUE;"
+        let qry = "";
+        if (id === 0) {
+            qry += "select idProducto, null as idUsuario, 0 as cantidad,nombreProducto, descripcionProducto, precio, stock, imagen ";
+            qry += "from producto ";
+            qry += "where activo = 1 order by 1;"
+        } else {
+            qry += `SELECT idProducto, idUsuario, cantidad, nombreProducto, descripcionProducto, precio, stock, imagen `;
+            qry += `FROM (`;
+            qry += `SELECT idProducto, idUsuario, cantidad, nombreProducto, descripcionProducto, precio, stock, imagen, ROW_NUMBER() OVER (PARTITION BY idProducto ORDER BY idUsuario DESC) AS rn `;
+            qry += `FROM (`;
+            qry += `SELECT idProducto, NULL AS idUsuario, 0 AS cantidad, nombreProducto, descripcionProducto, precio, stock, imagen `;
+            qry += `FROM producto `;
+            qry += `WHERE activo = 1 `;
+            qry += `UNION `;
+            qry += `SELECT prod.idProducto, ped.idUsuario, c.cantidad, prod.nombreProducto, prod.descripcionProducto, prod.precio, prod.stock, prod.imagen `;
+            qry += `FROM pedido ped INNER JOIN carrito c ON ped.idPedido=c.idPedido `;
+            qry += `INNER JOIN producto prod ON prod.idProducto=c.idProducto `;
+            qry += `WHERE ped.idusuario = ${id} AND ped.estado = 'I' AND prod.activo = 1 `;
+            qry += `) AS combined `;
+            qry += `) AS numbered `;
+            qry += `WHERE rn = 1 `;
+            qry += `order by 1;`;
+        }
+        /* let qry = "select idProducto, null as idUsuario, 0 as cantidad,nombreProducto, descripcionProducto, precio, stock, imagen ";
+        qry += "from producto ";
+        qry += "where activo = 1;" */
         //crea la variable result y le asigna el resultado de la query mediante connection.query(qry);
         const result = await connection.query(qry);
         //res es el objeto de respuesta de Express y pasa el resultado de la query a formato JSON,
@@ -32,7 +58,7 @@ const getProducto = async (req, res) => {
         let qry = `SELECT * FROM producto WHERE idProducto = ${id};`
         const result = await connection.query(qry);
         res.json(result);
-        if (result.length === 0){
+        if (result.length === 0) {
             //retorna error 204 (no hay objetos que retornar)
             res.status(204);
         }
