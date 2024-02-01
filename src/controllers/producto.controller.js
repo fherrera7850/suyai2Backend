@@ -42,6 +42,10 @@ const getProductos = async (req, res) => {
         const result = await connection.query(qry);
         //res es el objeto de respuesta de Express y pasa el resultado de la query a formato JSON,
         //entonces cuando el cliente haga una solicitud GET el servidor responderé en formato JSON
+        // Deshabilitar la caché
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         res.json(result);
     } catch (error) {
         //retorna el error 500 (error interno del servidor)

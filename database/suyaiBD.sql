@@ -223,3 +223,5 @@ VALUES
 (NULL, 'Dispensador Sobremesa', 'Dispensador de sobremesa, soporta bidones de 10 y 20 litros.', '6000', '34', 'assets/products/dispensadorMesa.jpg', '1');
 
 UPDATE `producto` SET `imagen` = 'assets/products/dispensadorUSB.jpg' WHERE `producto`.`idProducto` = 1;
+
+ALTER TABLE usuario ADD lat FLOAT NOT NULL AFTER direccion, ADD lng FLOAT NOT NULL AFTER lat;

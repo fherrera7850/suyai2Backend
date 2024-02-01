@@ -18,11 +18,16 @@ const getCliente = async (req, res) => {
     try {
         const { id } = req.params;
         const connection = await getConnection();
-        let qry = `SELECT usuario.*, rol.abreviacionRol FROM usuario JOIN rol ON usuario.idRol = rol.idRol WHERE usuario.idUsuario = ${id} AND rol.abreviacionRol = 'c';` //SELECT * FROM usuario WHERE idUsuario = ${id};
+        let qry = `SELECT idUsuario,nombreCompleto,email,direccion,lat,lng,telefono,abreviacionRol FROM usuario JOIN rol ON usuario.idRol = rol.idRol WHERE usuario.idUsuario = ${id} AND rol.abreviacionRol = 'c' and activo = 1;` //SELECT * FROM usuario WHERE idUsuario = ${id};
         const result = await connection.query(qry);
-        res.json(result);
         if (result.length === 0){
-            res.status(204);
+            res.sendStatus(204);
+        }else{
+            // Deshabilitar la caché
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+            res.json(result);
         }
     } catch (error) {
         res.status(500);
