@@ -1,18 +1,20 @@
 import { getConnection } from "./../database/database";
-import crypto from 'crypto';
+//import crypto from 'crypto';
 import { getDefaultCart } from './../cartUtils';
 
+/*
 const encryptData = (data) => {
+  
   const secretKey = crypto.randomBytes(32);
   const iv = crypto.randomBytes(16);
 
   const cipher = crypto.createCipheriv('aes-256-cbc', secretKey, iv);
   let encryptedData = cipher.update(data, 'utf-8', 'hex');
   encryptedData += cipher.final('hex');
-
+  
   return encryptedData;
 };
-
+*/
 const loginUsuario = async (req, res) => {
   const connection = await getConnection();
 
@@ -27,11 +29,11 @@ const loginUsuario = async (req, res) => {
     if (result.length > 0) {
       const idUsuario = result[0].idUsuario;
       const idRol = result[0].idRol;
-
+/*
       const encryptedIdUsuario = encryptData(idUsuario.toString());
       const encryptedIdRol = encryptData(idRol.toString());
-
-      res.cookie('sesionUsuario', JSON.stringify({ idUsuario: encryptedIdUsuario, idRol: encryptedIdRol, cartItems: getDefaultCart() }), { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+*/
+      res.cookie('sesionUsuario', JSON.stringify({ idUsuario, idRol}));
       res.status(200).json({ nombreUsuario });
     } else {
       res.status(204).send();

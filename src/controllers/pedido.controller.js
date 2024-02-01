@@ -122,10 +122,46 @@ const deletePedido = async (req, res) => {
     }
 };
 
+const getDetallePedido = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+
+        const connection = await getConnection();
+        
+        let qry =   `SELECT 
+                        c.idPedido, 
+                        u.nombreCompleto, 
+                        u.direccion,
+                        u.telefono,
+                        u.email,
+                        c.cantidad, 
+                        p.fecha, 
+                        p.estado, 
+                        p.monto 
+                    FROM carrito c
+                    JOIN pedido p ON c.idPedido = p.idPedido
+                    JOIN usuario u ON p.idUsuario = u.idUsuario
+                    WHERE u.idUsuario = ${id};`
+        
+        const result = await connection.query(qry);
+        
+        res.json(result);
+        
+        if (result.length === 0){
+            res.status(204);
+        }
+    } catch (error) {
+        res.status(500);
+        res.send(error.message);
+    }
+};
+
 export const methods = {
     getPedidos,
     getPedido,
     addPedido,
     updatePedido,
-    deletePedido
+    deletePedido,
+    getDetallePedido
 };
