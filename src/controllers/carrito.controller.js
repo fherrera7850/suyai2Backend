@@ -52,6 +52,7 @@ const hayProductoEnCarro = async (idPedido, idProducto) => {
 const carroProductos = async (idUsuario) => {
     try {
         const connection = await getConnection();
+        await connection.query('START TRANSACTION');
         let qry = `SELECT idProducto, idUsuario, cantidad, nombreProducto, descripcionProducto, precio, stock, imagen `;
         qry += `FROM (`;
         qry += `SELECT idProducto, idUsuario, cantidad, nombreProducto, descripcionProducto, precio, stock, imagen, ROW_NUMBER() OVER (PARTITION BY idProducto ORDER BY idUsuario DESC) AS rn `;
@@ -68,7 +69,10 @@ const carroProductos = async (idUsuario) => {
         qry += `) AS numbered `;
         qry += `WHERE rn = 1 `;
         qry += `order by 1;`;
-        return await connection.query(qry);
+        const result = await connection.query(qry);
+        await connection.query("COMMIT");
+
+        return result;
 
     } catch (error) {
         console.log("🚀 ~ hayProductoEnCarro ~ error:", error)
