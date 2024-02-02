@@ -18,7 +18,8 @@ const getCliente = async (req, res) => {
     try {
         const { id } = req.params;
         const connection = await getConnection();
-        let qry = `SELECT idUsuario, nombreUsuario,nombreCompleto,email,direccion,lat,lng,telefono,abreviacionRol,puntosCliente FROM usuario JOIN rol ON usuario.idRol = rol.idRol WHERE usuario.idUsuario = ${id} AND rol.abreviacionRol = 'c' and activo = 1;` //SELECT * FROM usuario WHERE idUsuario = ${id};
+        let qry = `SELECT idUsuario, nombreUsuario,nombreCompleto,email,direccion,lat,lng,telefono,abreviacionRol,puntosCliente FROM usuario JOIN rol ON usuario.idRol = rol.idRol WHERE usuario.idUsuario = ${id} 
+         and activo = 1;` //SELECT * FROM usuario WHERE idUsuario = ${id};
         const result = await connection.query(qry);
         if (result.length === 0) {
             res.sendStatus(204);
