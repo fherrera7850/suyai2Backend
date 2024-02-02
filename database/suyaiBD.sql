@@ -227,3 +227,5 @@ UPDATE `producto` SET `imagen` = 'assets/products/dispensadorUSB.jpg' WHERE `pro
 ALTER TABLE usuario ADD lat DOUBLE NOT NULL AFTER direccion, ADD lng DOUBLE NOT NULL AFTER lat;
 
 ALTER TABLE pedido ADD formaEntrega CHAR(1) NULL AFTER estado;
+
+ALTER TABLE usuario ADD puntosCliente INT NULL AFTER nombreCompleto;

@@ -22,13 +22,15 @@ const loginUsuario = async (req, res) => {
 
   try {
     const result = await connection.query(
-      `SELECT u.idUsuario, r.idRol FROM usuario u INNER JOIN rol r ON r.idRol = u.idRol WHERE u.nombreUsuario = '${nombreUsuario}' AND u.passwordUsuario = '${passwordUsuario}';`,
+      `SELECT u.idUsuario, r.abreviacionRol FROM usuario u INNER JOIN rol r ON r.idRol = u.idRol WHERE u.nombreUsuario = '${nombreUsuario}' AND u.passwordUsuario = '${passwordUsuario}';`,
       req.body
     );
 
     if (result.length > 0) {
       const idUsuario = result[0].idUsuario;
-      res.json(idUsuario);
+      const rol = result[0].abreviacionRol;
+      const obj = {idUsuario, rol};
+      res.json(obj);
     } else {
       res.sendStatus(204)
     }

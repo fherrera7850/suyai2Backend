@@ -11,5 +11,6 @@ router.put("/:id", pedidoController.updatePedido);
 router.delete("/:id", pedidoController.deletePedido);
 router.post("/completaPedido", pedidoController.completaPedido);
 router.get("/getPedidoById/:id", pedidoController.getPedidoById);
+router.get("/getOrdersByUser/:id", pedidoController.getOrdersByUser);
 
 export default router;
