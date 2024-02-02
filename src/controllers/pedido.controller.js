@@ -1,7 +1,6 @@
 import { getConnection } from "../database/database";
 
 const getPedidos = async (req, res) => {
-    console.log(req.user);
 
     try {
         const connection = await getConnection();
@@ -16,7 +15,6 @@ const getPedidos = async (req, res) => {
         if (userResult.length > 0) {
             idRol = userResult[0].idRol;
         } else {
-            res.status(401).json({ message: 'Unauthorized' });
             return;
         }
 
@@ -39,7 +37,9 @@ const getPedidos = async (req, res) => {
         }
 
         const result = await connection.query(qry);
+        console.log("🚀 ~ getPedidos ~ qry:", qry)
         res.json(result);
+        res.status(200);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -126,30 +126,37 @@ const getDetallePedido = async (req, res) => {
     try {
         const { id } = req.params;
 
-
         const connection = await getConnection();
+        await connection.query('START TRANSACTION')
 
-        let qry = `SELECT 
-                        c.idPedido, 
-                        u.nombreCompleto, 
-                        u.direccion,
-                        u.telefono,
-                        u.email,
-                        c.cantidad, 
-                        p.fecha, 
-                        p.estado, 
-                        p.monto 
+        let qry = `SELECT
+                        u.nombreUsuario,
+                        p.monto,
+                        p.estado,
+                        DATE_FORMAT(p.fecha, '%d-%m-%Y %H:%i:%s') AS fecha,
+                        p.formaEntrega,
+                        u.direccion, 
+                        prod.nombreProducto,
+                        prod.precio,
+                        c.cantidad
                     FROM carrito c
                     JOIN pedido p ON c.idPedido = p.idPedido
+                    JOIN producto prod ON c.idProducto = prod.idProducto
                     JOIN usuario u ON p.idUsuario = u.idUsuario
-                    WHERE u.idUsuario = ${id};`
+                    WHERE p.idPedido = ${id} and p.estado = 'C';`
 
         const result = await connection.query(qry);
-
-        res.json(result);
+        await connection.query('COMMIT')
 
         if (result.length === 0) {
-            res.status(204);
+            res.sendStatus(204);
+        } else {
+            // Deshabilitar la caché
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+            res.json(result);
+            res.status(200);
         }
     } catch (error) {
         res.status(500);
@@ -158,7 +165,7 @@ const getDetallePedido = async (req, res) => {
 };
 
 const completaPedido = async (req, res) => {
-    const { idUsuario, formaEntrega, monto } = req.body;
+    const { idUsuario, formaEntrega, monto, puntosCliente } = req.body;
 
     const connection = await getConnection();
 
@@ -175,7 +182,13 @@ const completaPedido = async (req, res) => {
         await connection.query(`UPDATE pedido SET fecha = now(), estado = 'C', formaEntrega = '${formaEntrega}', monto = ${monto} 
         WHERE idPedido = ${idPedido};`); // LIMIT 1 para obtener el primer (y unico) pedido abierto
         await connection.query("COMMIT");
-        
+
+        //Actualiza puntos cliente
+        await connection.query('START TRANSACTION');
+        await connection.query(`UPDATE usuario SET puntosCliente = puntosCliente + ${puntosCliente} 
+        WHERE idUsuario = ${idUsuario};`); // LIMIT 1 para obtener el primer (y unico) pedido abierto
+        await connection.query("COMMIT");
+
         // Deshabilitar la caché
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.setHeader('Pragma', 'no-cache');
@@ -233,7 +246,69 @@ const getPedidoById = async (req, res) => {
 
         res.json(result[0]);
         res.status(200);
-        
+
+    } catch (error) {
+        res.status(500);
+        res.send(error.message);
+    }
+};
+
+const getOrdersByUser = async (req, res) => {
+
+    try {
+        const { id } = req.params;
+
+        const connection = await getConnection();
+
+        await connection.query('START TRANSACTION')
+        const abreviacionRol = await connection.query('select abreviacionRol from usuario inner join rol on rol.idRol = usuario.idRol where idUsuario = ' + id + ';');
+        console.log("🚀 ~ getOrdersByUser ~ abreviacionRol:", abreviacionRol[0].abreviacionRol)
+        await connection.query('commit ')
+
+        await connection.query('START TRANSACTION')
+        let qry = `
+        SELECT
+            p.idPedido,
+            u.idUsuario, 
+            u.nombreCompleto, 
+            u.email, 
+            CASE 
+                WHEN p.formaEntrega = 'D' THEN 'Despacho'
+                WHEN p.formaEntrega = 'T' THEN 'Retiro en Tienda'
+                ELSE 'Otro'
+            END AS formaEntrega,
+            CASE 
+                WHEN p.formaEntrega = 'D' THEN u.direccion
+                WHEN p.formaEntrega = 'T' THEN 'Las Araucarias 169, El Bosque, Chile'
+                ELSE 'Dirección no especificada'
+            END AS direccionEntrega,
+            DATE_FORMAT(p.fecha, '%d-%m-%Y %H:%i:%s') AS fechaPedido,
+            CONCAT('$ ', REPLACE(FORMAT(SUM(pr.precio * c.cantidad), 0), ',', '.')) AS total
+        FROM 
+            usuario u
+        INNER JOIN 
+            pedido p ON p.idUsuario = u.idUsuario
+        INNER JOIN 
+            carrito c ON c.idPedido = p.idPedido
+        INNER JOIN 
+            producto pr ON c.idProducto = pr.idProducto 
+        WHERE p.estado = 'C' `
+        if (abreviacionRol[0].abreviacionRol === 'c') {
+            qry += `and u.idUsuario = ${id} `
+        }
+        qry += `GROUP BY p.idPedido;`;
+
+        const result = await connection.query(qry);
+        await connection.query('commit ')
+
+        if (result.length === 0) {
+            res.status(204);
+            return;
+        }
+
+        res.json(result);
+        res.status(200);
+
     } catch (error) {
         res.status(500);
         res.send(error.message);
@@ -248,5 +323,6 @@ export const methods = {
     deletePedido,
     getDetallePedido,
     completaPedido,
-    getPedidoById
+    getPedidoById,
+    getOrdersByUser
 };
