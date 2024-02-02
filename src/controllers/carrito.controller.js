@@ -20,6 +20,7 @@ const crearPedido = async (idUsuario) => {
             idUsuario,
             fecha: null,
             estado: 'I',
+            formaEntrega: null,
             monto: 0
         };
 

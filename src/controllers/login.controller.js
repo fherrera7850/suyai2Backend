@@ -28,15 +28,9 @@ const loginUsuario = async (req, res) => {
 
     if (result.length > 0) {
       const idUsuario = result[0].idUsuario;
-      const idRol = result[0].idRol;
-/*
-      const encryptedIdUsuario = encryptData(idUsuario.toString());
-      const encryptedIdRol = encryptData(idRol.toString());
-*/
-      res.cookie('sesionUsuario', JSON.stringify({ idUsuario, idRol}));
-      res.status(200).json({ nombreUsuario });
+      res.json(idUsuario);
     } else {
-      res.status(204).send();
+      res.sendStatus(204)
     }
   } catch (error) {
     await connection.query("rollback");
